@@ -26,7 +26,8 @@ def webhook(event, context):
     except Exception as e:
         logger.error('ERROR occurred!', exc_info=e, stack_info=True)
 
-    return ERROR_RESPONSE
+    # return ERROR_RESPONSE
+    return OK_RESPONSE
 
 
 def set_webhook(event, context):
