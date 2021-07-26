@@ -20,7 +20,7 @@ def webhook(event, context):
     try:
         if event.get('httpMethod') == 'POST' and event.get('body'):
             data = event.get('body')
-            webhook_handler.dispatch(data)
+            webhook_handler.webhook(data)
 
             return OK_RESPONSE
     except Exception as e:
