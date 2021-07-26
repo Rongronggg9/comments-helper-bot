@@ -69,7 +69,7 @@ def set_poll(update: telegram.Update, context=None):
         return
 
     command = message.text
-    if command == '/set_poll <%DEFAULT%>':
+    if command.endswith('<%DEFAULT%>'):
         logger.info(f'Reset poll settings for {message.chat.title} ({message.chat.id}).')
         try:
             rds.hdel(RDS_NAME, message.chat.id)
@@ -100,9 +100,22 @@ def set_poll(update: telegram.Update, context=None):
         '`/set_poll Title<%%>Option 1<%%>Option 2<%%>Option 3`\n'
         'to set customized poll\\.\n\n'
         'Title must be 1\\-300 characters long, and there must be 2\\-10 options with 1\\-100 characters each\\.\n\n'
-        'If you would like to reset default, send `/set_poll <%DEFAULT%>`\\.',
+        'If you would like to reset default, send `/set_poll <%DEFAULT%>`\\.\n\n'
+        'Your current setting is:',
         parse_mode='MarkdownV2')
+    auto_poll(update)
     logger.info(f'Replied /set_poll help message to {message.chat.title} ({message.chat.id}).')
+
+def notify_monitoring(update: telegram.Update, context=None):
+    message = update.message
+    update.effective_message.reply_text('Start monitoring this group.\n\n'
+                                        'Grant me "Ban users" permission if you would like me to '
+                                        'automatically remove (and ban for 60s) '
+                                        'any user attempting to join this group.'
+                                        +
+                                        ('\n\nAlso, you can customize polls by sending /set_poll.' if rds else '')
+                                        )
+    logger.info(f'Start monitoring {message.chat.title} ({message.chat.id}).')
 
 
 def auto_kick_out(update: telegram.Update, context=None, bot_self_id=None):
@@ -112,11 +125,7 @@ def auto_kick_out(update: telegram.Update, context=None, bot_self_id=None):
     for new_chat_member in message.new_chat_members:
         user_id = new_chat_member.id
         if bot_self_id == user_id:
-            update.effective_message.reply_text('Start monitoring this group.\n\n'
-                                                'Grant me "Ban users" permission if you would like me to '
-                                                'automatically remove (and ban for 60s) '
-                                                'any user attempting to join this group.')
-            logger.info(f'Start monitoring {message.chat.title} ({message.chat.id}).')
+            notify_monitoring(update)
             continue
         if bot_self_id and not update.effective_chat.get_member(bot_self_id).can_restrict_members:
             logger.info(f'No permission, skipped auto removed {user_id} in {message.chat.title} ({message.chat.id}).')

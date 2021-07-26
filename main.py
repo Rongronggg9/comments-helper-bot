@@ -22,6 +22,8 @@ if __name__ == '__main__':
     updater = Updater(token=TOKEN, use_context=True, request_kwargs={'proxy_url': telegram_proxy})
     dp = updater.dispatcher
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, func.auto_kick_out))
+    dp.add_handler(
+        MessageHandler(Filters.status_update.chat_created & ~Filters.chat_type.channel, func.notify_monitoring))
     dp.add_handler(MessageHandler(Filters.user(TELEGRAM), func.auto_poll))
     dp.add_handler(MessageHandler(Filters.regex(r'^/set_poll'), func.set_poll))
     dp.add_handler(MessageHandler(Filters.chat_type.private, func.get_help))

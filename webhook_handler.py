@@ -26,6 +26,8 @@ def dispatch(data):
 
     if message.new_chat_members:
         func.auto_kick_out(update, bot_self_id=bot.id)
+    elif message.group_chat_created:
+        func.notify_monitoring(update)
     elif message.from_user.id == TELEGRAM:
         func.auto_poll(update)
     elif message.text and message.text.startswith('/set_poll'):
