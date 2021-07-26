@@ -1,0 +1,36 @@
+service: comments-helper-bot
+
+provider:
+  name: aws
+  runtime: python3.8
+  memorySize: 256
+  environment:
+    TOKEN: ${file(./serverless.env.yml):TOKEN, ''}
+    REDIS_HOST: ${file(./serverless.env.yml):REDIS_HOST, ''}
+    REDIS_PORT: ${file(./serverless.env.yml):REDIS_PORT, ''}
+    REDIS_PASSWORD: ${file(./serverless.env.yml):REDIS_PASSWORD, ''}
+
+functions:
+  webhook:
+    handler: lambda_handler.webhook
+    events:
+      - http: POST /${file(./serverless.env.yml):TOKEN, ''}
+
+  set_webhook:
+    handler: lambda_handler.set_webhook
+    events:
+      - http: POST /set_webhook
+      - http: GET /set_webhook
+
+package:
+  exclude:
+    - .idea/**
+    - .vercel/**
+    - api/**
+    - __pycache__/**
+    - README.md
+    - LICENSE
+    - Dockerfile
+
+plugins:
+  - serverless-python-requirements
