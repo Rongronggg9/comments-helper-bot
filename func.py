@@ -108,7 +108,7 @@ def set_poll(update: telegram.Update, context=None):
 
 def notify_monitoring(update: telegram.Update, context=None):
     message = update.message
-    update.effective_message.reply_text('Start monitoring this group.\n\n'
+    update.effective_message.reply_text(f'Start monitoring this group. Group name: {message.chat.title}\n\n'
                                         'Grant me "Ban users" permission if you would like me to '
                                         'automatically remove (and ban for 60s) '
                                         'any user attempting to join this group.'
