@@ -1,5 +1,5 @@
 import os
-from telegram.ext import Updater, MessageHandler, Filters
+from telegram.ext import Updater, MessageHandler, CommandHandler, Filters
 
 import func
 from log import logger
@@ -25,9 +25,10 @@ if __name__ == '__main__':
     dp.add_handler(
         MessageHandler(Filters.status_update.chat_created & ~Filters.chat_type.channel, func.notify_monitoring))
     dp.add_handler(MessageHandler(Filters.user(TELEGRAM), func.auto_poll))
-    dp.add_handler(MessageHandler(Filters.regex(r'^/set_poll'), func.set_poll))
+    dp.add_handler(CommandHandler('set_poll', func.set_poll))
+    dp.add_handler(CommandHandler('force_poll', func.force_poll))
     dp.add_handler(MessageHandler(Filters.chat_type.private, func.get_help))
-    dp.add_handler(MessageHandler(Filters.text('/help'), func.get_help))
+    dp.add_handler(CommandHandler('help', func.get_help))
 
     updater.start_polling()
     updater.idle()

@@ -39,6 +39,9 @@ def dispatch(update: telegram.Update):
         if text.startswith('/set_poll'):
             func.set_poll(update)
             return
+        if text.startswith('/force_poll'):
+            func.force_poll(update)
+            return
         if text.startswith('/help'):
             func.get_help(update)
             return
