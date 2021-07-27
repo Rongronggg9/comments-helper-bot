@@ -15,6 +15,7 @@
 * Add [@comments_helper_bot](https://t.me/comments_helper_bot) to the **discussion group** of a channel
 * Grant `Ban users` permission if needed
 * `/set_poll` to set customized polls
+* `/force_poll` to manually attach a poll to a message
 
 ## Deployment
 
