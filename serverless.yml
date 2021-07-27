@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: python3.8
   memorySize: 256
+  lambdaHashingVersion: 20201221
   environment:
     TOKEN: ${file(./serverless.env.yml):TOKEN, ''}
     REDIS_HOST: ${file(./serverless.env.yml):REDIS_HOST, ''}
@@ -23,14 +24,16 @@ functions:
       - http: GET /set_webhook
 
 package:
-  exclude:
-    - .idea/**
-    - .vercel/**
-    - api/**
-    - __pycache__/**
-    - README.md
-    - LICENSE
-    - Dockerfile
+  patterns:
+    - '!.idea/**'
+    - '!.vercel/**'
+    - '!api/**'
+    - '!__pycache__/**'
+    - '!README.md'
+    - '!LICENSE'
+    - '!Dockerfile'
+    - '!serverless.env.yml'
+    - '!main.py'
 
 plugins:
   - serverless-python-requirements
