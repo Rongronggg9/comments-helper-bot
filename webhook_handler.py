@@ -17,6 +17,9 @@ logger.info('Initialized.')
 
 def dispatch(update: telegram.Update):
     message = update.message
+    if not message:
+        logger.info('Not a message.')
+        return
     text = message.text
     logger.debug(f'Received: {message}')
     if not message:
