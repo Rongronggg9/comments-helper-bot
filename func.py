@@ -103,7 +103,10 @@ def set_poll(update: telegram.Update, context=None):
         poll(update)
         return
     if command.find(' ') != -1:
-        arguments = command.split(' ', 1)[1].split('<%%>')
+        if command.find('<%%>') != -1:
+            arguments = command.split(' ', 1)[1].split('<%%>')
+        else:
+            arguments = command.split(' ')[1:]
         if 3 <= len(arguments) <= 11:
             logger.info(f'Set poll settings.')
             settings = f'{arguments[0][:299]}<%%>{"<%%>".join(option[:99] for option in arguments[1:])}'
@@ -120,10 +123,14 @@ def set_poll(update: telegram.Update, context=None):
         return
 
     replied_help_message = reply(
-        'Send a command like\n'
-        '`/set_poll Title<%%>Option 1<%%>Option 2<%%>Option 3`\n'
-        'to set customized poll\\.\n\n'
-        'Title must be 1\\-300 characters long, and there must be 2\\-10 options with 1\\-100 characters each\\.\n\n'
+        '*\\[Command usage\\]*\n'
+        'The 1st argument is the title, and the rest are the options\\.\n\n'
+        'If the title or options contains spaces, separate them with `<%%>`:\n'
+        '`/set_poll Title<%%>Option 1<%%>Option 2<%%>Option 3`\n\n'
+        'If the title and options do not contain spaces, separate them with spaces:\n'
+        '`/set_poll 💬 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟`\n\n'
+        '*The title must be 1\\-300 characters long, '
+        'and there must be 2\\-10 options with 1\\-100 characters each\\.*\n\n'
         'If you would like to reset default, send `/set_poll <%DEFAULT%>`\\.\n\n'
         'Your current setting is:',
         parse_mode='MarkdownV2')
