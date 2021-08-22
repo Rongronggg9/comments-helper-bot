@@ -92,6 +92,19 @@ def set_poll(update: telegram.Update, context=None, disposable=False):
         return
 
     command = message.text
+    if command.endswith('<%MANUAL%>'):
+        if disposable:
+            return
+        logger.info(f'Disabled auto poll.')
+        try:
+            rds.hset(RDS_NAME, message.chat.id, '<%MANUAL%>')
+        except:
+            reply('Database error.')
+            logger.error(f'Database error!')
+            return
+        reply('Disabled auto poll\\. You must reply /force\\_poll to a message to manually attach a poll\\.\n\n'
+              'To re\\-enable auto poll, send `/set_poll <%DEFAULT%>`\\.', parse_mode='MarkdownV2')
+        return
     if command.endswith('<%DEFAULT%>'):
         if disposable:
             poll(update, reply_to_message_id=message.reply_to_message.message_id,
@@ -139,8 +152,9 @@ def set_poll(update: telegram.Update, context=None, disposable=False):
         '`/set_poll 💬 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟`\n\n'
         '*The title must be 1\\-300 characters long, '
         'and there must be 2\\-10 options with 1\\-100 characters each\\.*\n\n'
+        'Disable auto poll is possible, just send `/set_poll <%MANUAL%>`\\.\n'
         'If you would like to reset default, send `/set_poll <%DEFAULT%>`\\.\n\n'
-        'Your current setting is:',
+        'Your current setting is \\(if nothing, your group is in manual mode\\):',
         parse_mode='MarkdownV2')
     poll(update, reply_to_message_id=replied_help_message.message_id)
     logger.info(f'Replied /set_poll help message.')
@@ -165,7 +179,7 @@ def force_poll(update: telegram.Update, context=None):
         set_poll(update, disposable=True)
         return
     reply_to_message_id = message.reply_to_message.message_id
-    poll(update, reply_to_message_id=reply_to_message_id)
+    poll(update, reply_to_message_id=reply_to_message_id, manual=True)
     try:
         message.delete()
     except:
@@ -220,7 +234,7 @@ def auto_poll(update: telegram.Update, context=None):
     poll(update)
 
 
-def poll(update: telegram.Update, context=None, reply_to_message_id=None, options_list=None):
+def poll(update: telegram.Update, context=None, reply_to_message_id=None, options_list=None, manual=False):
     message = update.message
     question = DEFAULT_POLL_QUESTION
     options = DEFAULT_POLL_OPTIONS
@@ -231,9 +245,14 @@ def poll(update: telegram.Update, context=None, reply_to_message_id=None, option
         try:
             options_str = rds.hget(RDS_NAME, message.chat.id)
             if options_str:
-                options_list = options_str.split('<%%>')
-                question = options_list[0]
-                options = options_list[1:]
+                if options_str == '<%MANUAL%>':
+                    if not manual:
+                        logger.info('Skipped poll because the group has disable auto poll.')
+                        return
+                else:
+                    options_list = options_str.split('<%%>')
+                    question = options_list[0]
+                    options = options_list[1:]
         except:
             question = DEFAULT_POLL_QUESTION
             options = DEFAULT_POLL_OPTIONS
