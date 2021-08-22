@@ -83,7 +83,7 @@ def get_help(update: telegram.Update, context=None):
 
 
 @permission_required(disallow_in_private=True)
-def set_poll(update: telegram.Update, context=None):
+def set_poll(update: telegram.Update, context=None, disposable=False):
     message = update.message
     reply = update.effective_message.reply_text
     if not rds:
@@ -93,6 +93,10 @@ def set_poll(update: telegram.Update, context=None):
 
     command = message.text
     if command.endswith('<%DEFAULT%>'):
+        if disposable:
+            poll(update, reply_to_message_id=message.reply_to_message.message_id,
+                 options_list=[DEFAULT_POLL_QUESTION, *DEFAULT_POLL_OPTIONS])
+            return
         logger.info(f'Reset poll settings.')
         try:
             rds.hdel(RDS_NAME, message.chat.id)
@@ -108,6 +112,10 @@ def set_poll(update: telegram.Update, context=None):
         else:
             arguments = command.split(' ')[1:]
         if 3 <= len(arguments) <= 11:
+            if disposable:
+                poll(update, reply_to_message_id=message.reply_to_message.message_id,
+                     options_list=[arguments[0][:299], *(option[:99] for option in arguments[1:])])
+                return
             logger.info(f'Set poll settings.')
             settings = f'{arguments[0][:299]}<%%>{"<%%>".join(option[:99] for option in arguments[1:])}'
             try:
@@ -143,10 +151,18 @@ def force_poll(update: telegram.Update, context=None):
     message = update.message
     if not message.reply_to_message:
         update.effective_message.reply_text(
-            'Reply this command to the message that needs to be attached with a poll.\n\n'
-            'Grant me "Delete messages" permission and I will automatically delete the command message.',
-            quote=False)
+            'Reply this command to the message that needs to be attached with a poll\\.\n\n'
+            'According to your settings:\n'
+            '`/force_poll`\n\n'
+            'Or temporarily use the different settings:\n'
+            '`/force_poll Title<%%>Option 1<%%>Option 2<%%>Option 3`\n'
+            '`/force_poll 💬 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟`\n\n'
+            'Grant me "Delete messages" permission and I will automatically delete the command message\\.',
+            parse_mode='MarkdownV2')
         logger.info(f'Replied /force_poll help message.')
+        return
+    if message.text.find(' ') != -1:
+        set_poll(update, disposable=True)
         return
     reply_to_message_id = message.reply_to_message.message_id
     poll(update, reply_to_message_id=reply_to_message_id)
@@ -204,11 +220,14 @@ def auto_poll(update: telegram.Update, context=None):
     poll(update)
 
 
-def poll(update: telegram.Update, context=None, reply_to_message_id=None):
+def poll(update: telegram.Update, context=None, reply_to_message_id=None, options_list=None):
     message = update.message
     question = DEFAULT_POLL_QUESTION
     options = DEFAULT_POLL_OPTIONS
-    if rds:
+    if options_list:
+        question = options_list[0]
+        options = options_list[1:]
+    elif rds:
         try:
             options_str = rds.hget(RDS_NAME, message.chat.id)
             if options_str:
