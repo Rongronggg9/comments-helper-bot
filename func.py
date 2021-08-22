@@ -247,7 +247,7 @@ def poll(update: telegram.Update, context=None, reply_to_message_id=None, option
             if options_str:
                 if options_str == '<%MANUAL%>':
                     if not manual:
-                        logger.info('Skipped poll because the group has disable auto poll.')
+                        logger.info('Skipped poll because the group has disabled auto poll.')
                         return
                 else:
                     options_list = options_str.split('<%%>')
