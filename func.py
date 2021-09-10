@@ -37,7 +37,7 @@ if REDIS_HOST:
 
 
 def permission_required(disallow_in_private):
-    def decorater(function):
+    def decorator(function):
         @functools.wraps(function)
         def wrapper(update, context=None, *args, **kwargs):
             message = update.message
@@ -63,7 +63,7 @@ def permission_required(disallow_in_private):
 
         return wrapper
 
-    return decorater
+    return decorator
 
 
 @permission_required(disallow_in_private=False)
