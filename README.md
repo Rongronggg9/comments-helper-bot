@@ -47,7 +47,7 @@
 1. Activate Webhook
     * GET or POST the `set_webhook` endpoint. It should be like:
     ```
-    https://<depends-on-your-deployment>.amazonaws.com/dev/set_webhook
+    https://<depends-on-your-deployment>.amazonaws.com/set_webhook
     ```
 
 ### Docker

@@ -18,13 +18,12 @@ def webhook(event, context):
     logger.info(f'Event: {event}')
 
     try:
-        if event.get('httpMethod') == 'POST' and event.get('body'):
-            data = event.get('body')
-            webhook_handler.webhook(data)
+        data = event.get('body')
+        webhook_handler.webhook(data)
 
-            return OK_RESPONSE
+        return OK_RESPONSE
     except Exception as e:
-        logger.error('ERROR occurred!', exc_info=e, stack_info=True)
+        logger.error('ERROR occurred!', exc_info=e)
 
     # return ERROR_RESPONSE
     return OK_RESPONSE
@@ -32,11 +31,16 @@ def webhook(event, context):
 
 def set_webhook(event, context):
     logger.info(f'Event: {event}')
+    lambda_stage = event.get('requestContext').get('stage')
+    if lambda_stage == '$default' or lambda_stage is None:
+        lambda_stage = ''
+    else:
+        lambda_stage += '/'
     url = \
-        f"https://{event.get('headers').get('Host')}/{event.get('requestContext').get('stage')}/{webhook_handler.TOKEN}"
-    webhook = webhook_handler.set_webhook(url)
+        f"https://{event.get('requestContext').get('domainName')}/{lambda_stage}{webhook_handler.TOKEN}"
+    webhook_successful = webhook_handler.set_webhook(url)
 
-    if webhook:
+    if webhook_successful:
         return OK_RESPONSE
 
     return ERROR_RESPONSE

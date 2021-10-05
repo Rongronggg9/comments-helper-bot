@@ -15,13 +15,13 @@ functions:
   webhook:
     handler: lambda_handler.webhook
     events:
-      - http: POST /${file(./serverless.env.yml):TOKEN, ''}
+      - httpApi: POST /${file(./serverless.env.yml):TOKEN, ''}
 
   set_webhook:
     handler: lambda_handler.set_webhook
     events:
-      - http: POST /set_webhook
-      - http: GET /set_webhook
+      - httpApi: POST /set_webhook
+      - httpApi: GET /set_webhook
 
 package:
   patterns:

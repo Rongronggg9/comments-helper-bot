@@ -61,5 +61,4 @@ def webhook(data):
 
 
 def set_webhook(url):
-    webhook = bot.set_webhook(url)
-    return webhook
+    return bot.set_webhook(url)
