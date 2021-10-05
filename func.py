@@ -32,8 +32,8 @@ if REDIS_HOST:
         _ = rds.type(RDS_NAME)
         if _ != 'hash' and _ != 'none':
             rds.delete(RDS_NAME)
-    except Exception as e:
-        logger.error('Cannot connect to redis, run in non-redis mode.', exc_info=e)
+    except Exception as _e:
+        logger.error('Cannot connect to redis, run in non-redis mode.', exc_info=_e)
 
 
 def permission_required(disallow_in_private):
@@ -98,9 +98,9 @@ def set_poll(update: telegram.Update, context=None, disposable=False):
         logger.info(f'Disabled auto poll.')
         try:
             rds.hset(RDS_NAME, message.chat.id, '<%MANUAL%>')
-        except:
+        except Exception as e:
             reply('Database error.')
-            logger.error(f'Database error!')
+            logger.error(f'Database error!', exc_info=e)
             return
         reply('Disabled auto poll\\. You must reply /force\\_poll to a message to manually attach a poll\\.\n\n'
               'To re\\-enable auto poll, send `/set_poll <%DEFAULT%>`\\.', parse_mode='MarkdownV2')
@@ -113,9 +113,9 @@ def set_poll(update: telegram.Update, context=None, disposable=False):
         logger.info(f'Reset poll settings.')
         try:
             rds.hdel(RDS_NAME, message.chat.id)
-        except:
+        except Exception as e:
             reply('Database error.')
-            logger.error(f'Database error!')
+            logger.error(f'Database error!', exc_info=e)
             return
         poll(update)
         return
@@ -133,9 +133,9 @@ def set_poll(update: telegram.Update, context=None, disposable=False):
             settings = f'{arguments[0][:299]}<%%>{"<%%>".join(option[:99] for option in arguments[1:])}'
             try:
                 rds.hset(RDS_NAME, message.chat.id, settings)
-            except:
+            except Exception as e:
                 reply('Database error.')
-                logger.error(f'Database error!')
+                logger.error(f'Database error!', exc_info=e)
                 return
             poll(update)
             return
