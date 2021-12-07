@@ -2,6 +2,7 @@ import os
 from telegram.ext import Updater, MessageHandler, CommandHandler, Filters
 
 import func
+import shared
 from log import logger
 
 TELEGRAM = 777000
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     logger.info('Bot is running.')
 
     updater = Updater(token=TOKEN, use_context=True, request_kwargs={'proxy_url': telegram_proxy})
+    shared.bot = updater.bot
     dp = updater.dispatcher
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, func.auto_kick_out))
     dp.add_handler(

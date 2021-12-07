@@ -2,8 +2,9 @@ import json
 import telegram
 import os
 
-from log import logger
 import func
+import shared
+from log import logger
 
 TELEGRAM = 777000
 
@@ -12,6 +13,7 @@ if not TOKEN:
     raise EnvironmentError('Telegram token is NOT SET!')
 
 bot = telegram.Bot(TOKEN)
+shared.bot = bot
 logger.info('Initialized.')
 
 
