@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import telegram
+import shared
 from telegram.error import BadRequest
 
 from log import logger
@@ -223,6 +224,14 @@ def auto_kick_out(update: telegram.Update, context=None, bot_self_id=None):
 def auto_poll(update: telegram.Update, context=None):
     global last_media_group_id
     message = update.message
+    if (message.forward_from_chat is None and message.forward_from is None) \
+            or message.sender_chat.id != shared.bot.get_chat(update.effective_chat.id).linked_chat_id:
+        # message from a user-hides-behind channel will not have `forward_from_chat`
+        # (except they forward a channel message, we should verify `sender_chat.id`)
+        # However, forwarded-from-user message from linked channel will not have `forward_from_chat` but `forward_from`
+        logger.debug(f'Ignored auto poll from an unrelated channel {message.sender_chat.id}'
+                     f'in {message.chat.title} ({message.chat.id}).')
+        return
     media_group_id = message.media_group_id
     logger.info(f'Last media group id: {str(last_media_group_id)}')
     if media_group_id is not None:
