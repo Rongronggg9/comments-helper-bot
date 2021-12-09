@@ -193,3 +193,5 @@ dist
 .idea/
 __pycache__/
 .vercel/
+
+package-lock.json
