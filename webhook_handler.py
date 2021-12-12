@@ -6,8 +6,6 @@ import func
 import shared
 from log import logger
 
-TELEGRAM = 777000
-
 TOKEN = os.environ.get('TOKEN')
 if not TOKEN:
     raise EnvironmentError('Telegram token is NOT SET!')
@@ -33,7 +31,7 @@ def dispatch(update: telegram.Update):
     if message.group_chat_created:
         func.notify_monitoring(update)
         return
-    if message.from_user.id == TELEGRAM:
+    if message.is_automatic_forward:
         func.auto_poll(update)
         return
     if text and text.startswith('/'):

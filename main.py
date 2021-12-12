@@ -5,8 +5,6 @@ import func
 import shared
 from log import logger
 
-TELEGRAM = 777000
-
 if __name__ == '__main__':
     TOKEN = os.environ.get('TOKEN')
     if not TOKEN or TOKEN == 'X':
@@ -26,7 +24,7 @@ if __name__ == '__main__':
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, func.auto_kick_out))
     dp.add_handler(
         MessageHandler(Filters.status_update.chat_created & ~Filters.chat_type.channel, func.notify_monitoring))
-    dp.add_handler(MessageHandler(Filters.user(TELEGRAM), func.auto_poll))
+    dp.add_handler(MessageHandler(Filters.is_automatic_forward, func.auto_poll))
     dp.add_handler(CommandHandler('set_poll', func.set_poll))
     dp.add_handler(CommandHandler('force_poll', func.force_poll))
     dp.add_handler(MessageHandler(Filters.chat_type.private, func.get_help))
