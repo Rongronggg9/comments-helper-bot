@@ -1,18 +1,35 @@
-# Use an official Python runtime as a parent image
-FROM python:3.8-slim
+FROM python:3.9-slim AS builder
 
-# Set the working directory to /app
+RUN apt-get update && apt-get install -y build-essential
+
+# initialize venv
+RUN python -m venv /opt/venv
+
+# activate venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# upgrade venv deps
+RUN pip install --trusted-host pypi.python.org --upgrade pip setuptools wheel
+
+COPY requirements.txt .
+
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+#----------------------------------------
+
+FROM python:3.9-slim
+
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+COPY --from=builder /opt/venv /opt/venv
+
 COPY . /app
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r /app/requirements.txt
+# activate venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Define environment variable
 ENV TOKEN X
 ENV T_PROXY X
 
-# Run app.py when the container launches
-CMD ["python", "-u", "main.py"]
+CMD ["python", "-u", "telegramRSSbot.py"]
