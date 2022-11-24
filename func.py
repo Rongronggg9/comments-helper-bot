@@ -1,3 +1,5 @@
+from typing import Union
+
 import functools
 import os
 from datetime import datetime, timedelta, timezone
@@ -35,6 +37,13 @@ if REDIS_HOST:
             rds.delete(RDS_NAME)
     except Exception as _e:
         logger.error('Cannot connect to redis, run in non-redis mode.', exc_info=_e)
+
+
+def describe_user(user: Union[telegram.User, telegram.Chat]):
+    name = user.full_name or user.title
+    username = user.username
+    uid = user.id
+    return f'{name} (' + (f'@{username}, ' if username else '') + f'{uid})'
 
 
 def permission_required(disallow_in_private):
@@ -202,23 +211,41 @@ def notify_monitoring(update: telegram.Update, context=None):
 
 
 def auto_kick_out(update: telegram.Update, context=None, bot_self_id=None):
-    message = update.message
+    new_chat_member = update.chat_member.new_chat_member.user
+    from_user = update.chat_member.from_user
+    chat = update.chat_member.chat
+    invite_link = update.chat_member.invite_link
+
     if context and not bot_self_id:
         bot_self_id = context.bot.bot.id
-    for new_chat_member in message.new_chat_members:
-        user_id = new_chat_member.id
-        if bot_self_id == user_id:
-            notify_monitoring(update)
-            continue
-        if bot_self_id and not update.effective_chat.get_member(bot_self_id).can_restrict_members:
-            logger.info(f'No permission, skipped auto removed {user_id} in {message.chat.title} ({message.chat.id}).')
-            return
-        try:
-            update.effective_chat.ban_member(user_id, until_date=datetime.now(timezone.utc) + timedelta(seconds=60))
-        except BadRequest as e:
-            logger.info(f'{e}. Cannot remove {user_id} from {message.chat.title} ({message.chat.id}).')
-            continue
-        logger.info(f'Removed {user_id} from {message.chat.title} ({message.chat.id}).')
+
+    user_id = new_chat_member.id
+    if bot_self_id == user_id:
+        notify_monitoring(update)
+        return
+
+    logger.info(f'{describe_user(new_chat_member)} joined group {describe_user(chat)}.')
+
+    if invite_link is not None:
+        logger.info(f'The user joined the group via a invite link {invite_link.invite_link} '
+                    f'(created by {describe_user(invite_link.creator)}). Bypassing removal.')
+        return
+    if from_user.id != new_chat_member.id:
+        logger.info(f'The user was added by {describe_user(from_user)}. Bypassing removal.')
+        return
+    if new_chat_member.is_bot:
+        logger.info(f'The user is a bot, probably added by an administrator. Bypassing removal.')
+        return
+    if bot_self_id and not chat.get_member(bot_self_id).can_restrict_members:
+        logger.info('No permission. Bypassing removal.')
+        return
+
+    try:
+        chat.ban_member(user_id, until_date=datetime.now(timezone.utc) + timedelta(seconds=60))
+        logger.info(f'Removed {describe_user(new_chat_member)} from group {describe_user(chat)}.')
+    except BadRequest as e:
+        logger.error(f'Remove failed.', exc_info=e)
+        return
 
 
 def auto_poll(update: telegram.Update, context=None):

@@ -16,18 +16,17 @@ logger.info('Initialized.')
 
 
 def dispatch(update: telegram.Update):
+    chat_member = update.chat_member
+    if chat_member and chat_member.new_chat_member and chat_member.new_chat_member.status == 'member':
+        func.auto_kick_out(update, bot_self_id=bot.id)
+        return
+
     message = update.message
-    if not message:
-        logger.info('Not a message.')
+    if message is None:
+        logger.info('Nothing should do.')
         return
     text = message.text
     logger.debug(f'Received: {message}')
-    if not message:
-        logger.info('Nothing should do.')
-        return
-    if message.new_chat_members:
-        func.auto_kick_out(update, bot_self_id=bot.id)
-        return
     if message.group_chat_created:
         func.notify_monitoring(update)
         return
@@ -61,4 +60,4 @@ def webhook(data):
 
 
 def set_webhook(url):
-    return bot.set_webhook(url)
+    return bot.set_webhook(url, allowed_updates=shared.ALLOWED_UPDATES)
